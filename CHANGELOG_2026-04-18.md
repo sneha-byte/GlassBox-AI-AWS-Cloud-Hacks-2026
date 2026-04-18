@@ -1,5 +1,6 @@
 # Changelog - 2026-04-18
 
+<<<<<<< HEAD
 ## Frontend ↔ Backend Integration
 - Synced frontend stadiums to backend (Lambeau, Allegiant, Yankee replace Camp Nou, Maracanã, Rose Bowl)
 - Synced frontend chaos modes to backend scenario enum (`price_spike`, `sensor_fail`, `api_broken`, `heat_wave`)
@@ -34,6 +35,7 @@
 - Updated `.gitignore` with Python, simulator, and SAM entries
 
 ## Added (backend)
+=======
 ## Added
 >>>>>>> 8d0b956 (feat: scaffold backend/simulator package (Role 2))
 - Scaffolded `backend/simulator/` package (Role 2: Simulator Architect)
