@@ -4,16 +4,10 @@
     "region": "us-east-1",
     "models": [
       {
-        "model_key": "bedrock-sonnet",
-        "display_name": "Claude Sonnet 4.5",
-        "model_id": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
-        "purpose": "best for orchestration, planning, and evaluation"
-      },
-      {
-        "model_key": "bedrock-haiku",
-        "display_name": "Claude Haiku 4.5",
-        "model_id": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
-        "purpose": "best for fast specialist responses and lower-cost runs"
+        "model_key": "bedrock-nova-lite",
+        "display_name": "Amazon Nova Lite",
+        "model_id": "amazon.nova-lite-v1:0",
+        "purpose": "general reasoning, planning, and responses"
       }
     ]
   },
@@ -22,37 +16,19 @@
       "agent_id": "manager-01",
       "name": "Manager",
       "agent_type": "manager",
-      "variant_label": "orchestrator",
-      "system_prompt": "Act as the manager agent. Understand the user's goal, break it into clear subproblems, decide which specialist should handle each part, and synthesize the final answer into a clean response. Stay organized, practical, and outcome-focused.",
-      "bedrock_model_ref": "bedrock-sonnet",
-      "reasoning_mode": "deep",
-      "tools": [],
-      "temperature": 0.2,
+      "system_prompt": "You are the manager agent. Break down problems, make structured decisions, and output clear actions in JSON format.",
+      "bedrock_model_ref": "bedrock-nova-lite",
+      "temperature": 0.3,
       "max_tokens": 500
     },
     {
       "agent_id": "judge-01",
       "name": "Judge",
       "agent_type": "judge",
-      "variant_label": "review and scoring",
-      "system_prompt": "Act as the judge agent. Review answers for correctness, clarity, completeness, and safety. Point out weak reasoning, unsupported claims, and missing details, then give a concise verdict with improvements.",
-      "bedrock_model_ref": "bedrock-sonnet",
-      "reasoning_mode": "deep",
-      "tools": [],
+      "system_prompt": "You are the judge agent. Evaluate the manager’s decision for safety, correctness, and clarity. Give a score from 1-10 and short feedback.",
+      "bedrock_model_ref": "bedrock-nova-lite",
       "temperature": 0.1,
-      "max_tokens": 420
-    },
-    {
-      "agent_id": "environment-01",
-      "name": "Environment Engineer",
-      "agent_type": "expert",
-      "variant_label": "gardening and sustainability specialist",
-      "system_prompt": "Act as an environment engineering and gardening expert. Help with soil, plants, watering, composting, environmental science basics, sustainability choices, climate topics, and ecosystem questions. Give practical, beginner-friendly advice with clear steps, tradeoffs, and environmentally responsible recommendations.",
-      "bedrock_model_ref": "bedrock-haiku",
-      "reasoning_mode": "balanced",
-      "tools": [],
-      "temperature": 0.2,
-      "max_tokens": 450
+      "max_tokens": 300
     }
   ]
 }
