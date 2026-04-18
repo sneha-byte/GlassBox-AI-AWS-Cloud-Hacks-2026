@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+__pycache__/
+*.pyc
+*.tsbuildinfo
+.env
+.DS_Store
