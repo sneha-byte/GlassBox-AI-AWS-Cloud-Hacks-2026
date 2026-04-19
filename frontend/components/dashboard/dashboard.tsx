@@ -5,6 +5,7 @@ import { ArrowLeft, Wifi, WifiOff } from "lucide-react"
 import { useAppState } from "@/lib/app-state"
 import { stadiums, scenarios, type Scenario } from "@/lib/stadiums"
 import { startSession, stopSession, formatTraceAsLogLines } from "@/lib/api"
+import { dedupeTracesById } from "@/lib/dedupe-traces"
 import { useGlassboxStream } from "@/hooks/use-glassbox-stream"
 import { useTracePolling } from "@/hooks/use-trace-polling"
 import type { Trace } from "@/lib/types"
@@ -55,8 +56,11 @@ export function Dashboard() {
   // Polling fallback (when WebSocket isn't available)
   const { traces: polledTraces } = useTracePolling(!connected ? sessionId : null)
 
-  // Use whichever source has traces
-  const incomingTraces = connected ? wsTraces : polledTraces
+  // Use whichever source has traces (dedupe in case WS or API replays a trace)
+  const incomingTraces = useMemo(
+    () => dedupeTracesById(connected ? wsTraces : polledTraces),
+    [connected, wsTraces, polledTraces],
+  )
 
   // Append new traces to log (from WebSocket or polling)
   useEffect(() => {
@@ -109,6 +113,9 @@ export function Dashboard() {
     if (!selectedStadium || isStarting) return
     setIsStarting(true)
     setError(null)
+    // Reset previous session data
+    setAllTraces([])
+    setTraceLines(INITIAL_TRACE)
     try {
       const { session_id } = await startSession(selectedStadium.id, selectedScenario)
       setSessionId(session_id)
@@ -218,6 +225,13 @@ export function Dashboard() {
           </div>
         )}
 
+        {/* Lighting off warning — the demo moment */}
+        {latestTrace?.observation.lighting_state === "off" && latestTrace.observation.attendance > 0 && (
+          <div className="mb-4 animate-pulse rounded-lg border border-red-500/60 bg-red-500/15 px-4 py-3 text-sm text-red-300">
+            🚨 LIGHTING DISABLED — {latestTrace.observation.attendance.toLocaleString()} attendees in the dark. NFPA 101 §7.8.1.2 violation.
+          </div>
+        )}
+
         <div className="space-y-6 rounded-2xl border border-border/80 bg-card/30 p-4 shadow-[0_24px_80px_oklch(0_0_0/0.35)] backdrop-blur-md sm:p-6">
           <div className="rounded-xl border border-border/60 bg-background/40">
             <WorkflowPipeline activeIndex={activeAgent} />
@@ -241,7 +255,11 @@ export function Dashboard() {
               <MetricTile label="OUTSIDE TEMP" value={`${latestTrace.observation.outside_temp_f}°F`} />
               <MetricTile label="INSIDE TEMP" value={`${latestTrace.observation.inside_temp_f}°F`} />
               <MetricTile label="ATTENDANCE" value={latestTrace.observation.attendance.toLocaleString()} />
-              <MetricTile label="GRID PRICE" value={`$${latestTrace.observation.grid_price_usd_mwh}/MWh`} />
+              <MetricTile
+                label="GRID PRICE"
+                value={`$${latestTrace.observation.grid_price_usd_mwh}/MWh`}
+                alert={latestTrace.observation.grid_price_usd_mwh > 200}
+              />
             </div>
           )}
 
@@ -303,18 +321,26 @@ export function Dashboard() {
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-lavender border-t-transparent" />
                   Starting session…
                 </span>
+              ) : allTraces.length > 0 ? (
+                "Start new session"
               ) : (
                 "Start simulation session"
               )}
             </Button>
           ) : (
-            <Button
-              variant="destructive"
-              className="h-12 w-full font-medium tracking-wide"
-              onClick={handleStop}
-            >
-              Stop session
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                variant="destructive"
+                className="h-12 flex-1 font-medium tracking-wide"
+                onClick={handleStop}
+              >
+                Stop session
+              </Button>
+              <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/50 px-4">
+                <span className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground">STEP</span>
+                <span className="font-mono text-lg text-lavender">{allTraces.length}</span>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -353,11 +379,22 @@ function StatusBadge({
   )
 }
 
-function MetricTile({ label, value }: { label: string; value: string }) {
+function MetricTile({ label, value, alert }: { label: string; value: string; alert?: boolean }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card/50 px-3 py-2.5 text-center">
-      <div className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground">{label}</div>
-      <div className="mt-1 font-mono text-sm text-foreground">{value}</div>
+    <div className={cn(
+      "rounded-lg border px-3 py-2.5 text-center transition-colors",
+      alert
+        ? "border-red-500/50 bg-red-500/10"
+        : "border-border/60 bg-card/50",
+    )}>
+      <div className={cn(
+        "text-[10px] font-semibold tracking-[0.2em]",
+        alert ? "text-red-400" : "text-muted-foreground",
+      )}>{label}</div>
+      <div className={cn(
+        "mt-1 font-mono text-sm",
+        alert ? "text-red-300" : "text-foreground",
+      )}>{value}</div>
     </div>
   )
 }
