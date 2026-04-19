@@ -123,25 +123,25 @@ export function SafetyQuadrant({ traces }: SafetyQuadrantProps) {
               type="number"
               dataKey="x"
               domain={[xMin, xMax]}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 10, fill: "#ffffff" }}
               label={{
                 value: "Emissions Saved (kg CO₂) →",
                 position: "bottom",
                 offset: 0,
-                style: { fontSize: 10, fill: "hsl(var(--muted-foreground))" },
+                style: { fontSize: 10, fill: "#ffffff" },
               }}
             />
             <YAxis
               type="number"
               dataKey="y"
               domain={[0, 10]}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 10, fill: "#ffffff" }}
               label={{
                 value: "Safety Score",
                 angle: -90,
                 position: "insideLeft",
                 offset: 10,
-                style: { fontSize: 10, fill: "hsl(var(--muted-foreground))" },
+                style: { fontSize: 10, fill: "#ffffff" },
               }}
             />
 
