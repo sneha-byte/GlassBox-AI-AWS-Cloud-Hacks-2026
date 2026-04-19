@@ -55,9 +55,13 @@ export function useGlassboxStream(sessionId: string | null): GlassboxStream {
       try {
         const msg: WsMessage = JSON.parse(ev.data)
         switch (msg.type) {
-          case "trace":
-            setTraces((prev) => [...prev, msg.payload])
+          case "trace": {
+            const next = msg.payload
+            setTraces((prev) =>
+              prev.some((p) => p.trace_id === next.trace_id) ? prev : [...prev, next],
+            )
             break
+          }
           case "critical_alert":
             setAlerts((prev) => [...prev, msg.payload])
             break
