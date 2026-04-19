@@ -5,7 +5,6 @@ import { ArrowLeft, Wifi, WifiOff } from "lucide-react"
 import { useAppState } from "@/lib/app-state"
 import { stadiums, scenarios, type Scenario } from "@/lib/stadiums"
 import { startSession, stopSession, formatTraceAsLogLines } from "@/lib/api"
-import { dedupeTracesById } from "@/lib/dedupe-traces"
 import { useGlassboxStream } from "@/hooks/use-glassbox-stream"
 import { useTracePolling } from "@/hooks/use-trace-polling"
 import type { Trace } from "@/lib/types"
@@ -56,11 +55,8 @@ export function Dashboard() {
   // Polling fallback (when WebSocket isn't available)
   const { traces: polledTraces } = useTracePolling(!connected ? sessionId : null)
 
-  // Use whichever source has traces (dedupe in case WS or API replays a trace)
-  const incomingTraces = useMemo(
-    () => dedupeTracesById(connected ? wsTraces : polledTraces),
-    [connected, wsTraces, polledTraces],
-  )
+  // Use whichever source has traces
+  const incomingTraces = connected ? wsTraces : polledTraces
 
   // Append new traces to log (from WebSocket or polling)
   useEffect(() => {

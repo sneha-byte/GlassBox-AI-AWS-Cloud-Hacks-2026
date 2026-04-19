@@ -34,11 +34,7 @@ export function useTracePolling(sessionId: string | null): TracePolling {
       const newTraces: Trace[] = data.traces ?? []
       if (newTraces.length > 0) {
         afterRef.current = data.total
-        setTraces((prev) => {
-          const seen = new Set(prev.map((p) => p.trace_id))
-          const merged = newTraces.filter((t) => !seen.has(t.trace_id))
-          return merged.length > 0 ? [...prev, ...merged] : prev
-        })
+        setTraces((prev) => [...prev, ...newTraces])
       }
       setError(null)
     } catch (err) {
