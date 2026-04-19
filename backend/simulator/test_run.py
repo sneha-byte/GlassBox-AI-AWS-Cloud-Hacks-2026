@@ -28,11 +28,6 @@ sys.path.insert(0, str(_backend_dir))
 _env_file = _backend_dir / ".env"
 if _env_file.exists():
     load_dotenv(_env_file, override=True)
-=======
-
-# Ensure parent directory is on path when run as script
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
->>>>>>> f6072ba (feat: scaffold backend/simulator package (Role 2))
 
 from simulator.bedrock_manager import invoke_manager
 from simulator.impact import compute_impact
