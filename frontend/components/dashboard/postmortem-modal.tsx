@@ -10,6 +10,16 @@ import {
 } from "@/components/ui/dialog"
 import type { Postmortem, CriticalAlert } from "@/lib/types"
 
+/** Pause, clear handlers/src, and null out an Audio element. */
+function disposeAudio(ref: React.MutableRefObject<HTMLAudioElement | null>) {
+  const audio = ref.current
+  if (!audio) return
+  audio.pause()
+  audio.onended = null
+  audio.removeAttribute("src")
+  ref.current = null
+}
+
 type PostmortemModalProps = {
   postmortems: Postmortem[]
   alerts: CriticalAlert[]
@@ -28,13 +38,17 @@ export function PostmortemModal({ postmortems, alerts, open, onOpenChange }: Pos
     ? alerts.find((a) => a.trace_id === latest.trace_id)
     : undefined
 
-  // Clean up audio when modal closes
+  // Dispose audio when modal closes or on unmount
   useEffect(() => {
     if (!open) {
-      audioRef.current?.pause()
+      disposeAudio(audioRef)
       setIsPlaying(false)
     }
   }, [open])
+
+  useEffect(() => {
+    return () => disposeAudio(audioRef)
+  }, [])
 
   const toggleAudio = useCallback(() => {
     if (!matchingAlert?.audio_url) return
@@ -44,9 +58,14 @@ export function PostmortemModal({ postmortems, alerts, open, onOpenChange }: Pos
       return
     }
     try {
-      if (!audioRef.current || audioRef.current.src !== matchingAlert.audio_url) {
-        audioRef.current = new Audio(matchingAlert.audio_url)
-        audioRef.current.addEventListener("ended", () => setIsPlaying(false))
+      // Dispose previous audio if switching to a different URL
+      if (audioRef.current && audioRef.current.src !== matchingAlert.audio_url) {
+        disposeAudio(audioRef)
+      }
+      if (!audioRef.current) {
+        const audio = new Audio(matchingAlert.audio_url)
+        audio.onended = () => setIsPlaying(false)
+        audioRef.current = audio
       }
       audioRef.current.currentTime = 0
       audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})

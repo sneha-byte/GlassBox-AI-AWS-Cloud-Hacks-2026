@@ -4,9 +4,19 @@ import { useEffect, useRef, useState, useCallback } from "react"
 import { AlertTriangle, Volume2, VolumeX, FileText, X } from "lucide-react"
 import type { CriticalAlert } from "@/lib/types"
 
+/** Pause, clear src/handlers, and null out an Audio element. */
+function disposeAudio(ref: React.MutableRefObject<HTMLAudioElement | null>) {
+  const audio = ref.current
+  if (!audio) return
+  audio.pause()
+  audio.onended = null
+  audio.removeAttribute("src")
+  ref.current = null
+}
+
 type CriticalAlertToastProps = {
   alerts: CriticalAlert[]
-  onViewReport?: (traceId: string) => void
+  onViewReport?: () => void
 }
 
 export function CriticalAlertToast({ alerts, onViewReport }: CriticalAlertToastProps) {
@@ -22,12 +32,8 @@ export function CriticalAlertToast({ alerts, onViewReport }: CriticalAlertToastP
       seenRef.current = alerts.length
       setVisible(latest)
 
-      // Stop & discard any previously playing audio
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.removeAttribute("src")
-        audioRef.current = null
-      }
+      // Stop & fully dispose any previously loaded audio
+      disposeAudio(audioRef)
       setIsPlaying(false)
 
       // Pre-load audio so it's ready when user clicks
@@ -35,7 +41,7 @@ export function CriticalAlertToast({ alerts, onViewReport }: CriticalAlertToastP
         try {
           const audio = new Audio(latest.audio_url)
           audio.preload = "auto"
-          audio.addEventListener("ended", () => setIsPlaying(false))
+          audio.onended = () => setIsPlaying(false)
           audioRef.current = audio
         } catch {
           // Audio creation failed — ignore
@@ -43,6 +49,11 @@ export function CriticalAlertToast({ alerts, onViewReport }: CriticalAlertToastP
       }
     }
   }, [alerts.length])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => disposeAudio(audioRef)
+  }, [])
 
   const toggleAudio = useCallback(() => {
     const audio = audioRef.current
@@ -57,7 +68,7 @@ export function CriticalAlertToast({ alerts, onViewReport }: CriticalAlertToastP
   }, [isPlaying])
 
   const dismiss = useCallback(() => {
-    audioRef.current?.pause()
+    disposeAudio(audioRef)
     setIsPlaying(false)
     setVisible(null)
   }, [])
@@ -83,7 +94,7 @@ export function CriticalAlertToast({ alerts, onViewReport }: CriticalAlertToastP
             {onViewReport && (
               <button
                 onClick={() => {
-                  onViewReport(visible.trace_id)
+                  onViewReport()
                   dismiss()
                 }}
                 className="flex items-center gap-1.5 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[11px] font-medium text-red-300 transition-colors hover:bg-red-500/20 hover:text-red-200"
