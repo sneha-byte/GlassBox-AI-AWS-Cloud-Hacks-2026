@@ -55,8 +55,6 @@ export function PostmortemModal({ postmortems, alerts, open, onOpenChange }: Pos
     }
   }, [matchingAlert, isPlaying])
 
-  if (!latest) return null
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto border-red-500/30 bg-card" aria-describedby="postmortem-description">
@@ -86,13 +84,21 @@ export function PostmortemModal({ postmortems, alerts, open, onOpenChange }: Pos
         </DialogHeader>
 
         <div className="prose prose-invert prose-sm max-w-none" id="postmortem-description">
-          <div className="rounded-lg border border-border bg-background/50 p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap">
-            {latest.markdown}
-          </div>
-        </div>
-
-        <div className="mt-2 text-[10px] text-muted-foreground">
-          Trace: {latest.trace_id}
+          {latest ? (
+            <>
+              <div className="rounded-lg border border-border bg-background/50 p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap">
+                {latest.markdown}
+              </div>
+              <div className="mt-2 text-[10px] text-muted-foreground">
+                Trace: {latest.trace_id}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="mb-3 h-5 w-5 animate-spin rounded-full border-2 border-red-400 border-t-transparent" />
+              <p className="text-sm text-muted-foreground">Generating post-incident report…</p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

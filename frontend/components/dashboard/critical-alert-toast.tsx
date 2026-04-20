@@ -21,6 +21,13 @@ export function CriticalAlertToast({ alerts, onViewReport }: CriticalAlertToastP
       const latest = alerts[alerts.length - 1]
       seenRef.current = alerts.length
       setVisible(latest)
+
+      // Stop & discard any previously playing audio
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.removeAttribute("src")
+        audioRef.current = null
+      }
       setIsPlaying(false)
 
       // Pre-load audio so it's ready when user clicks
